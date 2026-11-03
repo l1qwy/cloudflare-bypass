@@ -7,7 +7,7 @@ CF_API_TOKEN = os.environ.get("CF_API_TOKEN", "").replace("*", "").strip()
 CF_ACCOUNT_ID = os.environ.get("CF_ACCOUNT_ID", "").replace("*", "").strip()
 
 LIST_NAME = "AI_Bypass_List"
-DOMAINS_URL = "https://raw.githubusercontent.com/Geohide/geohide-node/main/lists/gpt.txt"
+DOMAINS_URL = "https://geohide.ru/ru/domains.txt"
 
 # ИСУПРАВЛЕНО: Правильный базовый URL для Cloudflare API v4 Gateway
 BASE_URL = f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT_ID}/gateway/lists"
@@ -18,8 +18,29 @@ headers = {
 }
 
 def get_domains():
-    response = requests.get(DOMAINS_URL)
-    return [line.strip() for line in response.text.splitlines() if line.strip() and not line.startswith("#")]
+    try:
+        response = requests.get(DOMAINS_URL, timeout=10)
+    except Exception as e:
+        print(f"❌ Ошибка сети при запросе к Geohide: {e}")
+        exit(1)
+
+    # Проверяем, что сайт отдал успешный ответ, а не ошибку сервера
+    if response.status_code != 200 or "<!DOCTYPE html>" in response.text:
+        print(f"❌ Не удалось получить список доменов. Статус: {response.status_code}")
+        print("Возможно, сайт geohide.ru временно недоступен или включил защиту от ботов.")
+        exit(1)
+
+    valid_domains = []
+    for line in response.text.splitlines():
+        line = line.strip()
+        # Отсекаем пустые строки, комментарии, пробелы внутри строк и адреса с портами (где есть ":")
+        if line and not line.startswith("#") and ":" not in line and " " not in line:
+            # На всякий случай проверяем, что строка похожа на домен (содержит точку)
+            if "." in line:
+                valid_domains.append(line)
+
+    print(f"📥 Успешно загружено валидных доменов с Geohide: {len(valid_domains)}")
+    return valid_domains
 
 def get_existing_lists():
     url = BASE_URL
