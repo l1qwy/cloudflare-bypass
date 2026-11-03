@@ -7,7 +7,7 @@ CF_API_TOKEN = os.environ.get("CF_API_TOKEN", "").replace("*", "").strip()
 CF_ACCOUNT_ID = os.environ.get("CF_ACCOUNT_ID", "").replace("*", "").strip()
 
 LIST_NAME = "AI_Bypass_List"
-DOMAINS_URL = "https://geohide.ru/ru/domains.txt"
+DOMAINS_URL = "https://githubusercontent.com"
 
 # ИСУПРАВЛЕНО: Правильный базовый URL для Cloudflare API v4 Gateway
 BASE_URL = f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT_ID}/gateway/lists"
