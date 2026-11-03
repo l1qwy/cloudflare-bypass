@@ -2,8 +2,9 @@ import os
 import requests
 import json
 
-CF_API_TOKEN = os.environ.get("CF_API_TOKEN", "").strip()
-CF_ACCOUNT_ID = os.environ.get("CF_ACCOUNT_ID", "").strip()
+# Принудительно очищаем секреты от любых случайных символов форматирования (звездочек, пробелов, кавычек)
+CF_API_TOKEN = os.environ.get("CF_API_TOKEN", "").replace("*", "").strip()
+CF_ACCOUNT_ID = os.environ.get("CF_ACCOUNT_ID", "").replace("*", "").strip()
 
 LIST_NAME = "AI_Bypass_List"
 DOMAINS_URL = "https://raw.githubusercontent.com/Geohide/geohide-node/main/lists/gpt.txt"
