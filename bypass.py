@@ -10,7 +10,7 @@ LIST_NAME = "AI_Bypass_List"
 DOMAINS_URL = "https://raw.githubusercontent.com/Geohide/geohide-node/main/lists/gpt.txt"
 
 # Базовый URL для Cloudflare API v4 Gateway
-BASE_URL = f"https://cloudflare.com{CF_ACCOUNT_ID}/gateway/lists"
+BASE_URL = f"https://cloudflare.com/{CF_ACCOUNT_ID}/gateway/lists"
 
 headers = {
     "Authorization": f"Bearer {CF_API_TOKEN}",
