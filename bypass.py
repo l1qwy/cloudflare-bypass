@@ -9,6 +9,9 @@ CF_ACCOUNT_ID = os.environ.get("CF_ACCOUNT_ID", "").replace("*", "").strip()
 LIST_NAME = "AI_Bypass_List"
 DOMAINS_URL = "https://raw.githubusercontent.com/Geohide/geohide-node/main/lists/gpt.txt"
 
+# Базовый URL для Cloudflare API v4 Gateway
+BASE_URL = f"https://cloudflare.com{CF_ACCOUNT_ID}/gateway/lists"
+
 headers = {
     "Authorization": f"Bearer {CF_API_TOKEN}",
     "Content-Type": "application/json"
@@ -19,7 +22,7 @@ def get_domains():
     return [line.strip() for line in response.text.splitlines() if line.strip() and not line.startswith("#")]
 
 def get_existing_lists():
-    url = f"https://cloudflare.com{CF_ACCOUNT_ID}/gateway/lists"
+    url = BASE_URL
     res = requests.get(url, headers=headers).json()
     if not res.get("success"):
         print(f"❌ API Error: {json.dumps(res.get('errors'))}")
@@ -40,17 +43,19 @@ def create_or_update_list():
         list_id = target_list["id"]
         print(f"🔄 Список {LIST_NAME} найден (ID: {list_id}). Обновляем...")
         
-        url = f"https://cloudflare.com{CF_ACCOUNT_ID}/gateway/lists/{list_id}"
-        payload = {"name": LIST_NAME, "type": "DOMAIN", "items": chunks}
+        url = f"{BASE_URL}/{list_id}"
+        # Для обновления структуры или очистки старых элементов (свойство items передает только первую пачку)
+        payload = {"name": LIST_NAME, "type": "DOMAIN", "items": chunks[0] if chunks else []}
         res = requests.put(url, headers=headers, json=payload).json()
         
         if not res.get("success"):
             print(f"❌ PUT Error: {json.dumps(res.get('errors'))}")
             exit(1)
             
+        # Догружаем оставшиеся части (со 2-го чанка)
         for chunk in chunks[1:]:
-            url = f"https://cloudflare.com{CF_ACCOUNT_ID}/gateway/lists/{list_id}/items"
-            res = requests.post(url, headers=headers, json=chunk).json()
+            url = f"{BASE_URL}/{list_id}/items"
+            res = requests.post(url, headers=headers, json={"append": chunk}).json()
             if not res.get("success"):
                 print(f"❌ Append Error: {json.dumps(res.get('errors'))}")
                 exit(1)
@@ -58,9 +63,10 @@ def create_or_update_list():
         print(f"✅ Успешно обновлено. Всего доменов: {len(domains)}")
     else:
         print(f"➕ Создаем новый список {LIST_NAME}...")
-        url = f"https://cloudflare.com{CF_ACCOUNT_ID}/gateway/lists"
+        url = BASE_URL
         
-        payload = {"name": LIST_NAME, "type": "DOMAIN", "description": "ChatGPT Bypass", "items": chunks}
+        # Передаем первый чанк при создании
+        payload = {"name": LIST_NAME, "type": "DOMAIN", "description": "ChatGPT Bypass", "items": chunks[0] if chunks else []}
         res = requests.post(url, headers=headers, json=payload).json()
         
         if not res.get("success"):
@@ -69,9 +75,10 @@ def create_or_update_list():
             
         list_id = res["result"]["id"]
         
+        # Догружаем остальные чанки
         for chunk in chunks[1:]:
-            url = f"https://cloudflare.com{CF_ACCOUNT_ID}/gateway/lists/{list_id}/items"
-            res = requests.post(url, headers=headers, json=chunk).json()
+            url = f"{BASE_URL}/{list_id}/items"
+            res = requests.post(url, headers=headers, json={"append": chunk}).json()
             if not res.get("success"):
                 print(f"❌ Population Error: {json.dumps(res.get('errors'))}")
                 exit(1)
