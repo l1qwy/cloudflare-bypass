@@ -23,11 +23,22 @@ def get_domains():
 
 def get_existing_lists():
     url = BASE_URL
-    res = requests.get(url, headers=headers).json()
+    print(f"📡 Отправляем запрос на URL: {url.replace(CF_ACCOUNT_ID, '***')}") # Безопасно выводим структуру в лог
+    
+    response = requests.get(url, headers=headers)
+    
+    # Если статус ответа не 200 (ОК), выводим сырой текст ошибки шлюза в консоль
+    if response.status_code != 200:
+        print(f"❌ Сервер вернул статус-код: {response.status_code}")
+        print(f"📄 Сырой ответ сервера: {response.text}")
+        exit(1)
+        
+    res = response.json()
     if not res.get("success"):
         print(f"❌ API Error: {json.dumps(res.get('errors'))}")
         exit(1)
     return res.get("result", [])
+
 
 def create_or_update_list():
     domains = get_domains()
