@@ -2,18 +2,18 @@ name: Update Cloudflare Zero Trust Lists
 
 on:
   schedule:
-    - cron: '0 2 * * *'
-  workflow_dispatch:
+    - cron: '0 2 * * *' # Запуск каждый день в 02:00 UTC
+  workflow_dispatch: # Позволяет запускать вручную кнопкой
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2 # ИСПРАВЛЕНО: Актуальная минорная версия
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5.3.0 # ИСПРАВЛЕНО: Актуальная минорная версия
         with:
           python-version: '3.x'
 
